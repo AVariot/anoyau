@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "vga.h"
 
+void test_string(void);
+
 static void wait(void) {
     for (volatile uint32_t i = 0; i < 500000000; i++) {}
 }
@@ -16,6 +18,9 @@ void kmain(uint32_t magic, uint32_t info) {
     (void)info;
 
     vga_init();
+
+    test_string();
+    wait();
 
     /* 1. Caractère simple + \n */
     phase("[1] chars et newline");
