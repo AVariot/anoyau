@@ -10,6 +10,12 @@ INCLUDES := $(addprefix -I,$(INCDIRS))
 
 # -MMD -MP : génère les .d (dépendances vers les .h) pour recompiler si un header change
 CFLAGS  := -std=gnu11 -ffreestanding -O2 -Wall -Wextra -m32 $(INCLUDES) -MMD -MP
+
+# make test : build séparé (build-test/) avec -DRUN_TESTS, lance les tests au boot
+ifdef TESTS
+CFLAGS  += -DRUN_TESTS
+endif
+
 ASFLAGS := -f elf32
 LDFLAGS := -T linker.ld -nostdlib
 
@@ -19,10 +25,13 @@ KERNEL  := $(BUILD)/kernel.elf
 ISO     := $(BUILD)/anoyau.iso
 
 C_SRCS   := $(shell find src -name '*.c')
+ifndef TESTS
+C_SRCS   := $(filter-out src/tests/%,$(C_SRCS))
+endif
 ASM_SRCS := $(shell find src -name '*.asm')
 OBJS     := $(C_SRCS:src/%.c=$(BUILD)/%.o) $(ASM_SRCS:src/%.asm=$(BUILD)/%.o)
 
-.PHONY: all check iso run debug verify clean
+.PHONY: all check iso run debug verify test test-debug clean
 
 all: $(KERNEL)
 
@@ -67,5 +76,12 @@ verify: $(KERNEL)
 	grub-file --is-x86-multiboot $(KERNEL) && echo "multiboot: ok"
 	i686-elf-readelf -l $(KERNEL)
 
+# Kernel + tests (src/tests/), dans build-test/ pour ne pas mélanger avec build/
+test:
+	$(MAKE) BUILD=build-test TESTS=1 run
+
+test-debug:
+	$(MAKE) BUILD=build-test TESTS=1 debug
+
 clean:
-	rm -rf $(BUILD)
+	rm -rf build build-test
