@@ -1,7 +1,8 @@
-
-#ifndef PRINTK_K
-#define PRINTK_K
+#ifndef PRINTK_H
+#define PRINTK_H
 
 #include <stdarg.h>
 
-#endif /* PRINTK_K */
+void printk(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+
+#endif /* PRINTK_H */
