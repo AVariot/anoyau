@@ -15,5 +15,6 @@
 void timer_init(uint32_t hz);
 void timer_tick(void);
 uint32_t timer_get_ticks(void);
+void sleep_ms(uint32_t ms);
 
 #endif /* TIMER_H */
