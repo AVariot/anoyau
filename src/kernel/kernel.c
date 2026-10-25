@@ -4,6 +4,7 @@
 #include "idt.h"
 #include "pic.h"
 #include "timer.h"
+#include "keyboard.h"
 
 #ifdef RUN_TESTS
 #include "tests.h"
@@ -32,6 +33,9 @@ void kmain(uint32_t magic, uint32_t info) {
     __asm__ volatile ("sti");
 
     for (;;) {
-        printk("ticks = %u\n", (unsigned int)timer_get_ticks());
+        char c = keyboard_get_char();
+        if (c) {
+            vga_putchar(c);
+        }
     }
 }

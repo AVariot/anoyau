@@ -1,6 +1,8 @@
 #include "isr_handler.h"
 #include "vga.h"
 #include "timer.h"
+#include "keyboard.h"
+#include "printk.h"
 
 static const char *exception_names[32] = {
     "Division By Zero",
@@ -45,10 +47,13 @@ void isr_handler(struct regs_s *r) {
     }
 
     if (r->int_no >= 32) {
-        pic_send_eoi(r->int_no - 32);
         if (r->int_no == 32) {
             timer_tick();
         }
+        if (r->int_no == 33) {
+            keyboard_handler();
+        }
+        pic_send_eoi(r->int_no - 32);
         return;
     }
 

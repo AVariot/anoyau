@@ -1,8 +1,6 @@
 #ifndef ISR_HANDLER_H
 #define ISR_HANDLER_H
 
-#include "printk.h"
-
 #include <stdint.h>
 
 struct regs_s {
@@ -13,5 +11,4 @@ struct regs_s {
 
 void isr_handler(struct regs_s *r);
 
-
-#endif /* ISR_HANDLER */
+#endif /* ISR_HANDLER_H */

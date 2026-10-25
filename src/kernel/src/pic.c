@@ -19,8 +19,8 @@ void pic_init(void) {
     // ICW4: enabke 8086 mode
     outb(PIC_MASTER_DATA, 0x01); 
     outb(PIC_SLAVE_DATA, 0x01);
-    // only IRQ 0 (timer) enabled
-    outb(PIC_MASTER_DATA, 0xFE);
+    // only IRQ 0 / IRQ 1 (timer / keyboard) enabled
+    outb(PIC_MASTER_DATA, 0xFC);
     // all slave IRQs disabled
     outb(PIC_SLAVE_DATA, 0xFF);
 }
