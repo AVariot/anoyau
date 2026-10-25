@@ -26,6 +26,20 @@ void vga_putchar(char c) {
     if (c == '\n') {
         row++;
         col = 0;
+    } else if (c == '\b') {
+        if (col == 0) {
+            if (row == 0) {
+                return;
+            }
+            row--;
+            col = VGA_WIDTH - 1;
+            while ((vga_address[(row * VGA_WIDTH) + col] & 0xFF) == ' ' && col != 0) {
+                col--;
+            }
+        } else {
+            col--;
+        }
+        vga_address[(row * VGA_WIDTH) + col] = ' ' | (color << 8);
     } else {
         // Cast because unsigned so can be negativ so fill of 1 in strng side
         vga_address[(row * VGA_WIDTH) + col] = (uint8_t)c | (color << 8);
