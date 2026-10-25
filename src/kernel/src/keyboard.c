@@ -24,7 +24,6 @@ static const char scancode_to_ascii_shift[128] = {
     '*', 0, ' ',
 };
 
-
 void keyboard_handler(void) {
     uint8_t scancode = inb(0x60);
     uint8_t next = (head + 1) % KBD_BUF_SIZE;
@@ -36,7 +35,6 @@ void keyboard_handler(void) {
     buffer[head] = scancode;
     head = next;
 }
-
 
 int keyboard_get_scancode(void) {
     if (head == tail) {

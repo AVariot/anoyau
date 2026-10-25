@@ -20,17 +20,17 @@ void kmain(uint32_t magic, uint32_t info) {
     pic_init();
     timer_init(100);
 
-    
-    #ifdef RUN_TESTS
+    /* from here on, interrupts (timer, keyboard) are delivered */
+    __asm__ volatile ("sti");
+
+#ifdef RUN_TESTS
     test_all();
     vga_clear();
-    #endif
-    
+#endif
+
     printk("anoyau\n");
     printk("magic = %x\n", (unsigned int)magic);
     printk("info  = %p\n", (void *)info);
-
-    __asm__ volatile ("sti");
 
     for (;;) {
         char c = keyboard_get_char();

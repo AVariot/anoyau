@@ -39,22 +39,14 @@ static const char *exception_names[32] = {
     "Reserved",
 };
 
-void isr_handler(struct regs_s *r) {
+static void panic(const struct regs_s *r) __attribute__((noreturn));
+
+/* Fatal CPU exception: show what we know and stop */
+static void panic(const struct regs_s *r) {
     const char *name = "Unknown";
 
     if (r->int_no < 32) {
         name = exception_names[r->int_no];
-    }
-
-    if (r->int_no >= 32) {
-        if (r->int_no == 32) {
-            timer_tick();
-        }
-        if (r->int_no == 33) {
-            keyboard_handler();
-        }
-        pic_send_eoi(r->int_no - 32);
-        return;
     }
 
     vga_setcolor(VGA_LIGHT_RED, VGA_BLACK);
@@ -74,4 +66,20 @@ void isr_handler(struct regs_s *r) {
     for (;;) {
         __asm__ volatile ("cli; hlt");
     }
+}
+
+void isr_handler(struct regs_s *r) {
+    /* vectors 0-31: CPU exceptions, never resumed */
+    if (r->int_no < 32) {
+        panic(r);
+    }
+
+    /* vectors 32-47: hardware IRQs */
+    if (r->int_no == 32) {
+        timer_tick();
+    }
+    if (r->int_no == 33) {
+        keyboard_handler();
+    }
+    pic_send_eoi(r->int_no - 32);
 }
