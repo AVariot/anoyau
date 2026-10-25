@@ -1,8 +1,12 @@
 
 #include "keyboard.h"
 
-static volatile uint8_t last_scancode = 0;
-static volatile uint8_t new_key = 0;
+#define KBD_BUF_SIZE 64
+
+static volatile uint8_t buffer[KBD_BUF_SIZE];
+static volatile uint8_t head = 0;
+static volatile uint8_t tail = 0;
+
 static uint8_t maj = 0;
 static const char scancode_to_ascii[128] = {
     0, 27, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b',
@@ -22,15 +26,30 @@ static const char scancode_to_ascii_shift[128] = {
 
 
 void keyboard_handler(void) {
-    last_scancode = inb(0x60);
-    new_key = 1;
+    uint8_t scancode = inb(0x60);
+    uint8_t next = (head + 1) % KBD_BUF_SIZE;
+
+    if (next == tail) {
+        return;
+    }
+
+    buffer[head] = scancode;
+    head = next;
 }
 
+
 int keyboard_get_scancode(void) {
-    if (!new_key) {
+    if (head == tail) {
         return -1;
     }
-    new_key = 0;
+
+    int last_scancode = buffer[tail];
+    if (tail == KBD_BUF_SIZE - 1) {
+        tail = 0;
+    } else {
+        tail++;
+    }
+
     return last_scancode;
 }
 
