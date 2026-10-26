@@ -14,7 +14,6 @@ static void vga_cursor(void) {
     outb(0x3D5, pos & 0xFF);
     outb(0x3D4, 0x0E);
     outb(0x3D5, (pos >> 8) & 0xFF);
-
 }
 
 void vga_init(void) {

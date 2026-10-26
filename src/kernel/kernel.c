@@ -5,6 +5,7 @@
 #include "pic.h"
 #include "timer.h"
 #include "keyboard.h"
+#include "tty.h"
 
 #ifdef RUN_TESTS
 #include "tests.h"
@@ -34,10 +35,11 @@ void kmain(uint32_t magic, uint32_t info) {
 
     vga_clear();
 
+    char line[64];
     for (;;) {
-        char c = keyboard_get_char();
-        if (c) {
-            vga_putchar(c);
-        }
+        printk("> ");
+        tty_readline(line, sizeof(line));
+        printk("tu as tape : %s\n", line);
     }
+
 }
