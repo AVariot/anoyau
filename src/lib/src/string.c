@@ -61,3 +61,33 @@ int strcmp(const char *a, const char *b) {
 
     return 0;
 }
+
+int split_line(char *line, char **argv, int max) {
+    int argc = 0;
+    char *p = line;
+
+    while (*p) {
+        while (*p == ' ') {
+            p++;
+        }
+
+        if (*p == '\0') {
+            break;
+        }
+        if (argc < max) {
+            argv[argc] = p;
+            argc++;
+        }
+
+        while (*p != '\0' && *p != ' ') {
+            p++;
+        }
+
+        if (*p == ' ') {
+            *p = '\0';
+            p++;
+        }
+    }
+
+    return argc;
+}
