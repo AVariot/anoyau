@@ -1,8 +1,9 @@
 #include <stdint.h>
 #include "tests.h"
+#include "timer.h"
 
 void test_wait(void) {
-    for (volatile uint32_t i = 0; i < 500000000; i++) {}
+    sleep_ms(2000);
 }
 
 void test_all(void) {

@@ -9,7 +9,7 @@ void test_vga(void);
 /* Endless output, never returns: not part of test_all() */
 void test_vga_stress(void);
 
-/* Crude delay so the screen can be read (no timer yet) */
+/* Pause so the screen can be read. Needs interrupts enabled (uses the timer) */
 void test_wait(void);
 
 /* string, printk, vga, one after the other */

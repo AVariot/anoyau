@@ -1,10 +1,21 @@
 
 #include "vga.h"
+#include "io.h"
 
 static volatile uint16_t *vga_address = (volatile uint16_t *)VGA_MEMORY;
 static int row = 0;
 static int col = 0;
 static uint8_t color = 0;
+
+static void vga_cursor(void) {
+    uint16_t pos = row * VGA_WIDTH + col;
+
+    outb(0x3D4, 0x0F);
+    outb(0x3D5, pos & 0xFF);
+    outb(0x3D4, 0x0E);
+    outb(0x3D5, (pos >> 8) & 0xFF);
+
+}
 
 void vga_init(void) {
     vga_setcolor(VGA_WHITE, VGA_BLACK);
@@ -16,6 +27,8 @@ void vga_clear(void) {
     }
     row = 0;
     col = 0;
+
+    vga_cursor();
 }
 
 void vga_setcolor(uint8_t fg, uint8_t bg) {
@@ -58,6 +71,7 @@ void vga_putchar(char c) {
             row = VGA_HEIGHT - 1;
         }
     }
+    vga_cursor();
 }
 
 void vga_puts(const char *s) {

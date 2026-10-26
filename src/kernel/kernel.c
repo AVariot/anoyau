@@ -32,6 +32,8 @@ void kmain(uint32_t magic, uint32_t info) {
     printk("magic = %x\n", (unsigned int)magic);
     printk("info  = %p\n", (void *)info);
 
+    vga_clear();
+
     for (;;) {
         char c = keyboard_get_char();
         if (c) {
