@@ -5,6 +5,7 @@
 #include "pic.h"
 #include "timer.h"
 #include "shell.h"
+#include "multiboot.h"
 
 #ifdef RUN_TESTS
 #include "tests.h"
@@ -27,6 +28,8 @@ void kmain(uint32_t magic, uint32_t info) {
     test_all();
     vga_clear();
 #endif
+
+    multiboot_print_mmap(magic, info);
 
     printk("anoyau 64 bits\n");
     printk("magic = %x\n", magic);
