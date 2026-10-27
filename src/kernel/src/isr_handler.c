@@ -41,6 +41,27 @@ static const char *exception_names[32] = {
 
 static void panic(const struct regs_s *r) __attribute__((noreturn));
 
+/*
+ * Page fault (vector 14): the CPU could not translate an address.
+ *
+ * CR2 holds the virtual address that caused the fault; it is a control
+ * register, so it can only be read with an instruction (like CR3).
+ * The pushed error code says why, bit by bit:
+ *   bit 0: 0 = page not present, 1 = protection violation on a present page
+ *   bit 1: 0 = read,             1 = write
+ *   bit 2: 0 = kernel (ring 0),  1 = user (ring 3)
+ */
+static void page_fault_info(const struct regs_s *r) {
+    uint64_t cr2;
+    __asm__ volatile ("mov %%cr2, %0" : "=r"(cr2));
+
+    printk("fault address = %lx\n", cr2);
+    printk("cause: %s, %s, %s mode\n",
+           (r->err_code & 1) ? "protection violation" : "page not present",
+           (r->err_code & 2) ? "write" : "read",
+           (r->err_code & 4) ? "user" : "kernel");
+}
+
 /* Fatal CPU exception: show what we know and stop */
 static void panic(const struct regs_s *r) {
     const char *name = "Unknown";
@@ -54,6 +75,9 @@ static void panic(const struct regs_s *r) {
     vga_setcolor(VGA_WHITE, VGA_BLACK);
 
     printk("Error: %d (%s)\n", (int)r->int_no, name);
+    if (r->int_no == 14) {
+        page_fault_info(r);
+    }
     printk("err_code=%lx rip=%lx cs=%lx rflags=%lx\n",
            r->err_code, r->rip, r->cs, r->rflags);
     printk("rsp=%lx ss=%lx\n", r->rsp, r->ss);

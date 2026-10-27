@@ -7,6 +7,7 @@
 #include "shell.h"
 #include "multiboot.h"
 #include "pmm.h"
+#include "vmm.h"
 
 #ifdef RUN_TESTS
 #include "tests.h"
@@ -33,7 +34,6 @@ void kmain(uint32_t magic, uint32_t info) {
     test_all();
     vga_clear();
 #endif
-
     multiboot_print_mmap(magic, info);
     printk("kernel: %p - %p (%lu KiB)\n", kernel_start, kernel_end,
        ((uintptr_t)kernel_end - (uintptr_t)kernel_start) >> 10);
