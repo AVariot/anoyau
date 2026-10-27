@@ -25,13 +25,6 @@ void kmain(uint32_t magic, uint32_t info) {
     pic_init();
     timer_init(100);
     pmm_init(magic, info);
-    printk("pmm: %lu frames libres (%lu KiB)\n", pmm_free_count(), pmm_free_count() * 4);
-    uint64_t a = pmm_alloc_frame();
-    uint64_t b = pmm_alloc_frame();
-    printk("alloc: %lx %lx (libres: %lu)\n", a, b, pmm_free_count());
-    pmm_free_frame(a);
-    uint64_t c = pmm_alloc_frame();
-    printk("apres free+alloc: %lx (doit etre = %lx)\n", c, a);
 
     /* from here on, interrupts (timer, keyboard) are delivered */
     __asm__ volatile ("sti");

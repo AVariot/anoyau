@@ -6,6 +6,7 @@
 #include "vga.h"
 #include <stdint.h>
 #include "timer.h"
+#include "pmm.h"
 
 #define MAX_ARG 8
 
@@ -28,6 +29,7 @@ static int cmd_help(char **line) {
     printk("    clear: clear the screen\n");
     printk("    ticks: display the number of ticks\n");
     printk("    echo: display a string\n");
+    printk("    mem: display the number of frame available\n");
     printk("---\n");
     return 0;
 }
@@ -56,12 +58,20 @@ static int cmd_echo(char **line) {
     return 0;
 }
 
+static int cmd_mem(char **line) {
+    (void)line;
+    size_t libres = pmm_free_count();
+    printk("free: %lu frames (%lu KiB)\n", libres, libres * FRAME_SIZE / 1024);
+    return 0;
+}
+
 static const struct cmd_s commands[] = {
     { "help", cmd_help },
     { "clear", cmd_clear },
     { "ls", cmd_ls },
     { "ticks", cmd_ticks },
     { "echo", cmd_echo },
+    { "mem", cmd_mem },
 };
 
 void shell(void) {
