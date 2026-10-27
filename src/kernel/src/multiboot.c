@@ -2,6 +2,13 @@
 #include "multiboot.h"
 #include "printk.h"
 
+/*
+    When the computer turning on the kernel know nothing about the machine.
+    Grub give us with the BIOS all informations:
+        eax = magic
+        ebx - info
+*/
+
 // info is the address of GRUB structure == usually 0x10000
 void multiboot_print_mmap(uint32_t magic, uint32_t info) {
     if (magic != MULTIBOOT_MAGIC) {
