@@ -1,32 +1,46 @@
-[bits 32]
+[bits 64]
 extern isr_handler
 
 section .text
 
 ; Common body of every stub. %1 = vector number.
 %macro ISR_BODY 0
-    push eax
-    push ecx
-    push edx
-    push ebx
-    push esp
-    push ebp
-    push esi
-    push edi
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
 
-    push esp                 ; argument of isr_handler(int num)
+    mov rdi, rsp
     call isr_handler
-    add esp, 4              ; caller removes its argument
 
-    pop edi
-    pop esi
-    pop ebp
-    add esp, 4              ; skip the saved esp (same as popa)
-    pop ebx
-    pop edx
-    pop ecx
-    pop eax
-    add esp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    add rsp, 16
+
 %endmacro
 
 ; Exceptions where the CPU does NOT push an error code
@@ -36,7 +50,7 @@ isr%1:
     push 0
     push %1
     ISR_BODY
-    iret
+    iretq
 %endmacro
 
 ; Exceptions where the CPU pushes an error code
@@ -45,7 +59,7 @@ global isr%1
 isr%1:
     push %1
     ISR_BODY
-    iret
+    iretq
 %endmacro
 
 ISR_NOERR 0
@@ -105,6 +119,6 @@ global isr_stub_table
 isr_stub_table:
 %assign i 0
 %rep 48
-    dd isr %+ i
+    dq isr %+ i
 %assign i i+1
 %endrep

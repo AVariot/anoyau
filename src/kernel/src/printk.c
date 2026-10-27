@@ -2,7 +2,7 @@
 #include "printk.h"
 #include "vga.h"
 
-static void print_unsigned(unsigned int v, unsigned int base) {
+static void print_unsigned(uint64_t v, unsigned int base) {
     static const char digits[] = "0123456789abcdef";
     char buf[32];
     char *p = buf + sizeof(buf);
@@ -32,6 +32,16 @@ void printk(const char *fmt, ...) {
             break;
         }
 
+        /* optional length modifier: %lx, %lu, %ld are 64 bits */
+        int is_long = 0;
+        if (*fmt == 'l') {
+            is_long = 1;
+            fmt++;
+            if (*fmt == '\0') {
+                break;
+            }
+        }
+
         switch (*fmt) {
             case 'c': {
                 char c = (char)va_arg(ap, int);
@@ -44,21 +54,21 @@ void printk(const char *fmt, ...) {
                 break;
             }
             case 'd': {
-                int n = va_arg(ap, int);
+                long n = is_long ? va_arg(ap, long) : va_arg(ap, int);
                 if (n < 0) {
                     vga_putchar('-');
-                    /* -(unsigned) avoid a depassment INT_MIN */
-                    print_unsigned(-(unsigned int)n, 10);
+                    /* -(unsigned) avoid a depassment INT_MIN / LONG_MIN */
+                    print_unsigned(-(uint64_t)n, 10);
                 } else {
                     print_unsigned(n, 10);
                 }
                 break;
             }
             case 'u':
-                print_unsigned(va_arg(ap, unsigned int), 10);
+                print_unsigned(is_long ? va_arg(ap, unsigned long) : va_arg(ap, unsigned int), 10);
                 break;
             case 'x':
-                print_unsigned(va_arg(ap, unsigned int), 16);
+                print_unsigned(is_long ? va_arg(ap, unsigned long) : va_arg(ap, unsigned int), 16);
                 break;
             case 'p': {
                 void *ptr = va_arg(ap, void *);

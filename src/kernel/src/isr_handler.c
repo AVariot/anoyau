@@ -54,14 +54,12 @@ static void panic(const struct regs_s *r) {
     vga_setcolor(VGA_WHITE, VGA_BLACK);
 
     printk("Error: %d (%s)\n", (int)r->int_no, name);
-    printk("err_code=%x eip=%x cs=%x eflags=%x\n",
-           (unsigned int)r->err_code, (unsigned int)r->eip,
-           (unsigned int)r->cs, (unsigned int)r->eflags);
-    printk("eax=%x ebx=%x ecx=%x edx=%x\n",
-           (unsigned int)r->eax, (unsigned int)r->ebx,
-           (unsigned int)r->ecx, (unsigned int)r->edx);
-    printk("esi=%x edi=%x ebp=%x\n",
-           (unsigned int)r->esi, (unsigned int)r->edi, (unsigned int)r->ebp);
+    printk("err_code=%lx rip=%lx cs=%lx rflags=%lx\n",
+           r->err_code, r->rip, r->cs, r->rflags);
+    printk("rsp=%lx ss=%lx\n", r->rsp, r->ss);
+    printk("rax=%lx rbx=%lx\n", r->rax, r->rbx);
+    printk("rcx=%lx rdx=%lx\n", r->rcx, r->rdx);
+    printk("rsi=%lx rdi=%lx rbp=%lx\n", r->rsi, r->rdi, r->rbp);
 
     for (;;) {
         __asm__ volatile ("cli; hlt");

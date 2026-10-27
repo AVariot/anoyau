@@ -13,12 +13,12 @@
 void gdt_init(void);
 
 void kmain(uint32_t magic, uint32_t info) {
-    timer_init(100);
     vga_init();
     vga_clear();
     gdt_init();
     idt_init();
     pic_init();
+    timer_init(100);
 
     /* from here on, interrupts (timer, keyboard) are delivered */
     __asm__ volatile ("sti");
@@ -28,9 +28,9 @@ void kmain(uint32_t magic, uint32_t info) {
     vga_clear();
 #endif
 
-    printk("anoyau\n");
-    printk("magic = %x\n", (unsigned int)magic);
-    printk("info  = %p\n", (void *)info);
+    printk("anoyau 64 bits\n");
+    printk("magic = %x\n", magic);
+    printk("info  = %p\n", (void *)(uintptr_t)info);
     sleep_ms(1000);
 
     vga_clear();

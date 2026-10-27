@@ -35,7 +35,7 @@
 ;
 ; From C: void gdt_init(void);
 
-[bits 32]
+[bits 64]
 
 ; dw = define word        = 16 bits
 ; db = define byte        =  8 bits
@@ -55,7 +55,8 @@ gdt_start:
     dw 0x0          ; base [0:15]
     db 0x0          ; base [16:23]
     db 10011010b    ; access: present, ring 0, code/data, executable, readable
-    db 11001111b    ; flags: 4 KiB granularity, 32 bit | limit [16:19] = 0xF
+    ;  GDL[AVL]
+    db 10101111b    ; flags: 4 KiB granularity, L=1 64 bits, D=0 | limit [16:19] = 0xF
     db 0x0          ; base [24:31]
 
     ; entry 2, selector 0x10: kernel data, 0 -> 4 GiB
@@ -63,14 +64,14 @@ gdt_start:
     dw 0x0          ; base [0:15]
     db 0x0          ; base [16:23]
     db 10010010b    ; access: present, ring 0, code/data, not executable, writable
-    db 11001111b    ; flags: 4 KiB granularity, 32 bit | limit [16:19] = 0xF
+    db 10101111b    ; flags: 4 KiB granularity, L=1 64 bits, D=0 | limit [16:19] = 0xF
     db 0x0          ; base [24:31]
 gdt_end:
 
-; what lgdt reads (6 bytes)
+; what lgdt reads (10 bytes)
 gdt_descriptor:
     dw gdt_end - gdt_start - 1  ; size of the table - 1
-    dd gdt_start                ; address of the table
+    dq gdt_start                ; address of the table
 
 KERNEL_CODE_SEL equ 0x08
 KERNEL_DATA_SEL equ 0x10
@@ -80,7 +81,8 @@ global gdt_init
 
 ; void gdt_init(void)
 gdt_init:
-    lgdt [gdt_descriptor]
+    ; rel = realtif a rip
+    lgdt [rel gdt_descriptor]
 
     ; data registers: mov through ax
     mov ax, KERNEL_DATA_SEL
@@ -90,7 +92,12 @@ gdt_init:
     mov gs, ax
     mov ss, ax
 
-    ; cs: far jump to the next line
-    jmp KERNEL_CODE_SEL:.reload_cs
+    ; cs: no direct far jump with a 64-bit address, so we build a far return:
+    ; push the new cs, then the address to continue at, and retfq pops both
+    push KERNEL_CODE_SEL
+    lea rax, [rel .reload_cs]
+    push rax
+    retfq
+
 .reload_cs:
     ret
