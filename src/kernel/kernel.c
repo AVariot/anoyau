@@ -8,6 +8,7 @@
 #include "multiboot.h"
 #include "pmm.h"
 #include "vmm.h"
+#include "kheap.h"
 
 #ifdef RUN_TESTS
 #include "tests.h"

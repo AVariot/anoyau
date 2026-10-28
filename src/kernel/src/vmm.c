@@ -155,6 +155,7 @@ static uint64_t *find_table(uint64_t *table, size_t idx) {
  * The physical frame is NOT freed: unmapping only cuts the link. The
  * caller owns the frame and may reuse it or map it somewhere else.
  */
+ // TODO: free one entry but not a PT became empty
 int vmm_unmap(uint64_t virt) {
     uint64_t cr3;
     __asm__ volatile ("mov %%cr3, %0" : "=r"(cr3));
