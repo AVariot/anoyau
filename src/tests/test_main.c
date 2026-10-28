@@ -14,4 +14,8 @@ void test_all(void) {
     test_wait();
 
     test_vga();
+    test_wait();
+
+    test_kheap();
+    test_wait();
 }

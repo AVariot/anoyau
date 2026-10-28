@@ -5,6 +5,7 @@
 void test_string(void);
 void test_printk(void);
 void test_vga(void);
+void test_kheap(void);
 
 /* Endless output, never returns: not part of test_all() */
 void test_vga_stress(void);
@@ -12,7 +13,7 @@ void test_vga_stress(void);
 /* Pause so the screen can be read. Needs interrupts enabled (uses the timer) */
 void test_wait(void);
 
-/* string, printk, vga, one after the other */
+/* string, printk, vga, kheap, one after the other */
 void test_all(void);
 
 #endif /* TESTS_H */

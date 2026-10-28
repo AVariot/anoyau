@@ -3,6 +3,7 @@
 #include "pmm.h"
 #include "vmm.h"
 #include "printk.h"
+#include "irq.h"
 
 #define HEAP_START 0x40000000UL
 
@@ -52,7 +53,7 @@ static int heap_grow(size_t pages) {
     return 0;
 }
 
-void *kmalloc(size_t size) {
+static void *kmalloc_locked(size_t size) {
     /* checked BEFORE rounding: a huge size would wrap around to 0 */
     if (size == 0 || size > HEAP_MAX_SIZE) {
         return NULL;
@@ -101,7 +102,7 @@ void *kmalloc(size_t size) {
     }
 }
 
-void kfree(void *ptr) {
+static void kfree_locked(void *ptr) {
     if (ptr == NULL) {
         return;
     }
@@ -137,4 +138,104 @@ void kfree(void *ptr) {
             cur->next = cur->next->next;
         }
     }
+}
+
+/*
+ * Public entry points. The heap list is updated in several steps, so an
+ * interrupt in the middle would see it half-modified: interrupts are masked
+ * for the whole operation. The previous RFLAGS is restored (not a blind
+ * sti), so a caller that already had interrupts off keeps them off.
+ */
+void *kmalloc(size_t size) {
+    uint64_t flags = irq_save();
+    void *p = kmalloc_locked(size);
+    irq_restore(flags);
+    return p;
+}
+
+void kfree(void *ptr) {
+    uint64_t flags = irq_save();
+    kfree_locked(ptr);
+    irq_restore(flags);
+}
+
+/*
+ * Invariants of the heap:
+ *  - the blocks follow each other with no gap: the first one is at
+ *    HEAP_START and each one starts right after the data of the previous;
+ *  - the last one ends exactly at heap_end;
+ *  - every header has a valid magic and a non-zero size multiple of 16.
+ * `expected` is the address the next header must have; it is compared with
+ * the pointer BEFORE the pointer is used, so a corrupted `next` is reported
+ * instead of causing a page fault.
+ */
+static int kheap_check_locked(void) {
+    uint64_t expected = HEAP_START;
+    size_t max_blocks = (heap_end - HEAP_START) / sizeof(struct block_s);
+    size_t n = 0;
+
+    for (struct block_s *b = heap_head; b != NULL; b = b->next) {
+        if (++n > max_blocks) {
+            printk("heap check: too many blocks (loop in the list?)\n");
+            return -1;
+        }
+        if ((uint64_t)(uintptr_t)b != expected) {
+            printk("heap check: block %p, expected at %lx (gap or overlap)\n", (void *)b, expected);
+            return -1;
+        }
+        if (expected + sizeof(struct block_s) > heap_end) {
+            printk("heap check: header at %lx is past the heap end\n", expected);
+            return -1;
+        }
+        if (b->magic != MAGIC_USED && b->magic != MAGIC_FREE) {
+            printk("heap check: block %p has bad magic %x\n", (void *)b, b->magic);
+            return -1;
+        }
+        if (b->size == 0 || (b->size & 15) != 0) {
+            printk("heap check: block %p has bad size %lu\n", (void *)b, b->size);
+            return -1;
+        }
+        expected += sizeof(struct block_s) + b->size;
+        if (expected > heap_end) {
+            printk("heap check: block %p overruns the heap end\n", (void *)b);
+            return -1;
+        }
+    }
+    if (expected != heap_end) {
+        printk("heap check: blocks end at %lx but the heap ends at %lx\n", expected, heap_end);
+        return -1;
+    }
+    return 0;
+}
+
+static void kheap_stats_locked(struct kheap_stats_s *s) {
+    s->heap_size = heap_end - HEAP_START;
+    s->blocks = 0;
+    s->used_blocks = 0;
+    s->used_bytes = 0;
+    s->free_bytes = 0;
+
+    for (struct block_s *b = heap_head; b != NULL; b = b->next) {
+        s->blocks++;
+        if (b->magic == MAGIC_USED) {
+            s->used_blocks++;
+            s->used_bytes += b->size;
+        } else {
+            s->free_bytes += b->size;
+        }
+    }
+    s->overhead = s->blocks * sizeof(struct block_s);
+}
+
+int kheap_check(void) {
+    uint64_t flags = irq_save();
+    int r = kheap_check_locked();
+    irq_restore(flags);
+    return r;
+}
+
+void kheap_stats(struct kheap_stats_s *s) {
+    uint64_t flags = irq_save();
+    kheap_stats_locked(s);
+    irq_restore(flags);
 }

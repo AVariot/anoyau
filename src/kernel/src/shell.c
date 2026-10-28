@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include "timer.h"
 #include "pmm.h"
+#include "kheap.h"
 
 #define MAX_ARG 8
 
@@ -30,6 +31,7 @@ static int cmd_help(char **line) {
     printk("    ticks: display the number of ticks\n");
     printk("    echo: display a string\n");
     printk("    mem: display the number of frame available\n");
+    printk("    heap: check the kernel heap and display its usage\n");
     printk("---\n");
     return 0;
 }
@@ -65,6 +67,19 @@ static int cmd_mem(char **line) {
     return 0;
 }
 
+static int cmd_heap(char **line) {
+    (void)line;
+    if (kheap_check() != 0) {
+        return 1;
+    }
+    struct kheap_stats_s s;
+    kheap_stats(&s);
+    printk("heap: %lu bytes mapped, %lu blocks (%lu used)\n", s.heap_size, s.blocks, s.used_blocks);
+    printk("      used %lu B, free %lu B, headers %lu B\n", s.used_bytes, s.free_bytes, s.overhead);
+    printk("heap check: ok\n");
+    return 0;
+}
+
 static const struct cmd_s commands[] = {
     { "help", cmd_help },
     { "clear", cmd_clear },
@@ -72,6 +87,7 @@ static const struct cmd_s commands[] = {
     { "ticks", cmd_ticks },
     { "echo", cmd_echo },
     { "mem", cmd_mem },
+    { "heap", cmd_heap },
 };
 
 void shell(void) {
