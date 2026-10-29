@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "keyboard.h"
 #include "printk.h"
+#include "task.h"
 
 static const char *exception_names[32] = {
     "Division By Zero",
@@ -96,12 +97,20 @@ void isr_handler(struct regs_s *r) {
         panic(r);
     }
 
-    /* vectors 32-47: hardware IRQs */
+    /*
+     * vectors 32-47: hardware IRQs.
+     * The EOI goes out FIRST: task_tick() may switch to another task, and
+     * this call would only return when this task is scheduled again. A late
+     * EOI would keep the PIC from delivering the next timer tick meanwhile.
+     * Interrupts are off inside a handler, so nothing can nest meanwhile.
+     */
+    pic_send_eoi(r->int_no - 32);
+
     if (r->int_no == 32) {
         timer_tick();
+        task_tick();            /* may not return until we are rescheduled */
     }
     if (r->int_no == 33) {
         keyboard_handler();
     }
-    pic_send_eoi(r->int_no - 32);
 }

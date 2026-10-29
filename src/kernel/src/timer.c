@@ -1,5 +1,6 @@
 
 #include "timer.h"
+#include "task.h"
 
 /*
 
@@ -41,10 +42,22 @@ uint32_t timer_get_ticks(void) {
     return ticks;
 }
 
-void sleep_ms(uint32_t ms) {
+uint32_t timer_ms_to_ticks(uint32_t ms) {
     // 1000 for ms
     // 999 = because we used 1000 so we don't want a rest
-    uint32_t wanted = (ms * timer_hz + 999) / 1000;
+    return (ms * timer_hz + 999) / 1000;
+}
+
+void sleep_ms(uint32_t ms) {
+    uint32_t wanted = timer_ms_to_ticks(ms);
+
+    /* once tasks run, sleep without burning CPU: another task takes over */
+    if (task_running()) {
+        task_sleep_ticks(wanted);
+        return;
+    }
+
+    /* before task_init(): busy wait */
     uint32_t start = ticks;
 
     while ((uint32_t)(ticks - start) < wanted) {

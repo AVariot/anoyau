@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include "printk.h"
 #include "vga.h"
+#include "isr_handler.h"
+#include "irq.h"
 
 static void print_unsigned(uint64_t v, unsigned int base) {
     static const char digits[] = "0123456789abcdef";
@@ -18,6 +20,7 @@ static void print_unsigned(uint64_t v, unsigned int base) {
 }
 
 void printk(const char *fmt, ...) {
+    uint64_t flags = irq_save();
     va_list ap;
     va_start(ap, fmt);
 
@@ -89,4 +92,5 @@ void printk(const char *fmt, ...) {
     }
 
     va_end(ap);
+    irq_restore(flags);
 }
